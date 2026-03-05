@@ -1,4 +1,4 @@
-from assistant.brain import run
+from assistant.ui import launch_ui
 
 if __name__ == "__main__":
-    run()
+    launch_ui()

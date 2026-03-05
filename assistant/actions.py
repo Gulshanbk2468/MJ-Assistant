@@ -1,28 +1,86 @@
 import webbrowser
 import os
-from assistant.voice import speak
+import datetime
+import pyttsx3
+import platform
+import subprocess
+import pyautogui
+import time
 
-def execute(command):
+# Initialize voice engine
+engine = pyttsx3.init()
+engine.setProperty('rate', 170)
+engine.setProperty('volume', 1.0)
+engine.setProperty('voice', 'english')  # Use female voice if available
 
-    # OPEN YOUTUBE
-    if "open youtube" in command:
-        speak("Okay Gulshan, opening YouTube.")
-        webbrowser.open_new_tab("https://www.youtube.com")
+def speak(text):
+    print(f"MJ: {text}")
+    engine.say(text)
+    engine.runAndWait()
 
-    # OPEN GOOGLE
-    elif "open google" in command:
-        speak("Okay Gulshan, opening Google.")
-        webbrowser.open_new_tab("https://www.google.com")
+# =====================================
+# 1️⃣ OPEN YOUTUBE
+# =====================================
+def open_youtube():
+    try:
+        webbrowser.open("https://www.youtube.com")
+    except:
+        os.system("start https://www.youtube.com")
 
-    # CLOSE CURRENT WINDOW (Windows shortcut)
-    elif "close it" in command or "close window" in command:
-        speak("Okay Gulshan, closing it.")
-        os.system("taskkill /im chrome.exe /f")
+# =====================================
+# 2️⃣ PLAY MUSIC
+# =====================================
+def play_music():
+    webbrowser.open("https://music.youtube.com")
 
-    # EXIT PROGRAM
-    elif "exit" in command or "shutdown mj" in command:
-        speak("MJ shutting down. Goodbye Gulshan.")
-        return "exit"
+# =====================================
+# 3️⃣ WHAT TIME IS IT
+# =====================================
+def tell_time():
+    now = datetime.datetime.now()
+    current_time = now.strftime("%I:%M %p")
+    speak(f"The time is {current_time}")
 
-    else:
-        speak("Sorry Gulshan, I don't know that command yet.")
+# =====================================
+# 4️⃣ SEARCH GOOGLE
+# =====================================
+def search_google(query):
+    webbrowser.open(f"https://www.google.com/search?q={query}")
+
+# =====================================
+# 5️⃣ SYSTEM CONTROL
+# =====================================
+def shutdown_pc():
+    os.system("shutdown /s /t 5")
+
+def restart_pc():
+    os.system("shutdown /r /t 5")
+
+# =====================================
+# 6️⃣ CLOSE WINDOW/TAB (ALL VARIATIONS)
+# =====================================
+def close_window():
+    """Close current window/tab using keyboard shortcut"""
+    try:
+        # Try multiple methods to ensure it works
+        pyautogui.hotkey('alt', 'f4')  # Close window
+        time.sleep(0.5)
+        pyautogui.hotkey('ctrl', 'w')   # Close tab (if browser)
+        speak("Closed")
+    except:
+        try:
+            # Alternative method
+            import keyboard
+            keyboard.press_and_release('alt+f4')
+        except:
+            speak("Could not close")
+
+def close_all():
+    """Close all windows (emergency)"""
+    try:
+        os.system("taskkill /f /im chrome.exe")
+        os.system("taskkill /f /im msedge.exe")
+        os.system("taskkill /f /im firefox.exe")
+        speak("All windows closed")
+    except:
+        speak("Close command failed")
