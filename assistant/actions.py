@@ -1,6 +1,6 @@
 """
 MJ ASSISTANT - ACTIONS MODULE
-All functions with Nepali + English support
+FINAL VERSION - All functions with voice replies
 """
 
 import webbrowser
@@ -10,13 +10,11 @@ import pyttsx3
 import time
 import pyautogui
 import urllib.parse
-import subprocess
-import platform
 import random
-from pathlib import Path
+from assistant.utils import *
 
 # =====================================
-# VOICE ENGINE INITIALIZATION
+# VOICE ENGINE
 # =====================================
 
 engine = pyttsx3.init()
@@ -24,330 +22,172 @@ engine.setProperty('rate', 170)
 engine.setProperty('volume', 1.0)
 
 def speak(text):
-    """Speak text and print to console"""
+    """Speak text with emotion"""
     print(f"🤖 MJ: {text}")
     engine.say(text)
     engine.runAndWait()
 
 # =====================================
-# YOUTUBE CONTROLLER CLASS
+# WINDOW MANAGEMENT
 # =====================================
 
-class YouTubeController:
-    def __init__(self):
-        self.is_playing = False
-        self.current_video = None
-        self.volume_level = 50
-        self.last_search = ""
-        self.tab_count = 0
-        
-    def open_youtube_main(self):
-        """Open YouTube in main tab"""
-        webbrowser.open_new_tab("https://www.youtube.com")
-        self.tab_count += 1
-        speak("YouTube kholidiye")
-        time.sleep(2)
-        
-    def open_new_youtube_tab(self):
-        """Open YouTube in new tab"""
-        webbrowser.open_new_tab("https://www.youtube.com")
-        self.tab_count += 1
-        speak("Arko YouTube tab kholidiye")
-        time.sleep(1)
-        
-    def search_in_current_tab(self, query):
-        """Search in current YouTube tab"""
-        if not query:
-            speak("Ke khojnu chahanchha?")
-            return
-        
-        self.last_search = query
-        speak(f"YouTube ma {query} khojdaichhu")
-        
-        try:
-            # Click on search box
-            pyautogui.click(x=500, y=150)
-            time.sleep(0.5)
-            pyautogui.hotkey('ctrl', 'a')
-            pyautogui.press('delete')
-            time.sleep(0.3)
-            pyautogui.typewrite(query)
-            time.sleep(0.5)
-            pyautogui.press('enter')
-            time.sleep(2)
-            pyautogui.click(x=500, y=350)
-            self.is_playing = True
-            self.current_video = query
-        except:
-            # Fallback
-            encoded = urllib.parse.quote(query)
-            webbrowser.open(f"https://www.youtube.com/results?search_query={encoded}")
-    
-    def play_first_video(self):
-        """Play first video"""
-        try:
-            pyautogui.click(x=500, y=350)
-            self.is_playing = True
-            speak("Pahilo video play garchhu")
-        except:
-            speak("Video play huna sakena")
-    
-    def play_next_video(self):
-        """Next video"""
-        pyautogui.hotkey('shift', 'n')
-        speak("Arko video")
-    
-    def play_previous_video(self):
-        """Previous video"""
-        pyautogui.hotkey('shift', 'p')
-        speak("Pahilo video")
-    
-    def close_youtube_tab(self):
-        """Close current YouTube tab"""
+def close_current_window():
+    """Close current window with voice"""
+    try:
+        pyautogui.hotkey('alt', 'f4')
+        time.sleep(0.3)
         pyautogui.hotkey('ctrl', 'w')
-        if self.tab_count > 0:
-            self.tab_count -= 1
-        speak("YouTube tab band gare")
-    
-    def switch_to_next_tab(self):
-        """Switch to next tab"""
-        pyautogui.hotkey('ctrl', 'tab')
-        speak("Arko tab ma gayo")
-    
-    def switch_to_previous_tab(self):
-        """Switch to previous tab"""
-        pyautogui.hotkey('ctrl', 'shift', 'tab')
-        speak("Pahilo tab ma gayo")
-    
-    def pause_video(self):
-        """Pause video"""
-        pyautogui.press('space')
-        speak("Video rokidiye")
-    
-    def resume_video(self):
-        """Resume video"""
-        pyautogui.press('space')
-        speak("Video feri chalayo")
-    
-    def volume_up(self):
-        """Volume up"""
-        if self.volume_level < 100:
-            self.volume_level += 10
-            for _ in range(3):
-                pyautogui.press('up')
-            speak(f"Volume {self.volume_level} percent")
-    
-    def volume_down(self):
-        """Volume down"""
-        if self.volume_level > 0:
-            self.volume_level -= 10
-            for _ in range(3):
-                pyautogui.press('down')
-            speak(f"Volume {self.volume_level} percent")
-    
-    def fullscreen(self):
-        """Toggle fullscreen"""
-        pyautogui.press('f')
-        speak("Fullscreen gare")
-
-# Create YouTube controller instance
-yt = YouTubeController()
+        speak("Window closed.")
+        return True
+    except:
+        try:
+            os.system("taskkill /f /im chrome.exe")
+            os.system("taskkill /f /im msedge.exe")
+            speak("Window closed.")
+            return True
+        except:
+            speak("Unable to close window.")
+            return False
 
 # =====================================
-# YOUTUBE WRAPPER FUNCTIONS
+# YOUTUBE FUNCTIONS
 # =====================================
 
 def youtube_open():
-    yt.open_youtube_main()
+    """Open YouTube"""
+    webbrowser.open("https://www.youtube.com")
+    speak("Opening YouTube for you Gulshan.")
 
-def youtube_new_tab():
-    yt.open_new_youtube_tab()
+def youtube_play_nepali(song_name=""):
+    """Play Nepali song"""
+    if song_name:
+        query = f"{song_name} nepali song"
+    else:
+        nepali_songs = ["Resham Firiri", "Mutu Bhanda Mitho", "Sirf Timi", "Samhalinchu"]
+        query = random.choice(nepali_songs)
+    webbrowser.open(f"https://www.youtube.com/results?search_query={urllib.parse.quote(query)}")
+    speak(f"Playing {query} for you Gulshan.")
 
-def youtube_search(query):
-    yt.search_in_current_tab(query)
+def youtube_play_bollywood(song_name=""):
+    """Play Bollywood song"""
+    if song_name:
+        query = f"{song_name} bollywood song"
+    else:
+        bollywood_songs = ["Tum Hi Ho", "Kesariya", "Channa Mereya", "Kalank"]
+        query = random.choice(bollywood_songs)
+    webbrowser.open(f"https://www.youtube.com/results?search_query={urllib.parse.quote(query)}")
+    speak(f"Playing {query} for you Gulshan.")
 
-def youtube_play_first():
-    yt.play_first_video()
+def youtube_play_artist(artist_name):
+    """Play artist songs"""
+    webbrowser.open(f"https://www.youtube.com/results?search_query={urllib.parse.quote(artist_name + ' songs')}")
+    speak(f"Playing {artist_name} songs for you Gulshan.")
 
-def youtube_next():
-    yt.play_next_video()
-
-def youtube_previous():
-    yt.play_previous_video()
-
-def youtube_close_tab():
-    yt.close_youtube_tab()
-
-def youtube_next_tab():
-    yt.switch_to_next_tab()
-
-def youtube_prev_tab():
-    yt.switch_to_previous_tab()
+def youtube_play_song(song_name):
+    """Play specific song"""
+    webbrowser.open(f"https://www.youtube.com/results?search_query={urllib.parse.quote(song_name)}")
+    speak(f"Playing {song_name} for you Gulshan.")
 
 def youtube_pause():
-    yt.pause_video()
+    """Pause video"""
+    pyautogui.press('space')
+    speak("Video paused.")
 
 def youtube_resume():
-    yt.resume_video()
+    """Resume video"""
+    pyautogui.press('space')
+    speak("Video resumed.")
+
+def youtube_next():
+    """Next video"""
+    pyautogui.hotkey('shift', 'n')
+    speak("Next video.")
+
+def youtube_previous():
+    """Previous video"""
+    pyautogui.hotkey('shift', 'p')
+    speak("Previous video.")
 
 def youtube_volume_up():
-    yt.volume_up()
+    """Volume up"""
+    for _ in range(3):
+        pyautogui.press('up')
+    speak("Volume increased.")
 
 def youtube_volume_down():
-    yt.volume_down()
+    """Volume down"""
+    for _ in range(3):
+        pyautogui.press('down')
+    speak("Volume decreased.")
 
 def youtube_fullscreen():
-    yt.fullscreen()
+    """Fullscreen"""
+    pyautogui.press('f')
+    speak("Fullscreen mode.")
 
 # =====================================
 # WEBSITE FUNCTIONS
 # =====================================
 
-def open_website(site_name):
-    """Open any website"""
-    webbrowser.open(f"https://www.{site_name}.com")
-    speak(f"{site_name} kholidiye")
-
 def open_google():
     webbrowser.open("https://www.google.com")
-    speak("Google kholidiye")
-
-def open_youtube():
-    webbrowser.open("https://www.youtube.com")
-    speak("YouTube kholidiye")
+    speak("Opening Google for you Gulshan.")
 
 def open_chatgpt():
     webbrowser.open("https://chat.openai.com")
-    speak("ChatGPT kholidiye")
-
-def open_deepseek():
-    webbrowser.open("https://chat.deepseek.com")
-    speak("DeepSeek kholidiye")
-
-def open_github():
-    webbrowser.open("https://github.com")
-    speak("GitHub kholidiye")
-
-def open_gmail():
-    webbrowser.open("https://mail.google.com")
-    speak("Gmail kholidiye")
+    speak("Opening ChatGPT.")
 
 def open_facebook():
     webbrowser.open("https://facebook.com")
-    speak("Facebook kholidiye")
+    speak("Opening Facebook.")
 
 def open_instagram():
     webbrowser.open("https://instagram.com")
-    speak("Instagram kholidiye")
+    speak("Opening Instagram.")
 
-# =====================================
-# SEARCH FUNCTIONS
-# =====================================
-
-def search_google(query):
-    """Search on Google"""
-    if not query:
-        speak("Ke khojnu chahanchha?")
-        return
-    encoded = urllib.parse.quote(query)
-    webbrowser.open(f"https://www.google.com/search?q={encoded}")
-    speak(f"Google ma {query} khojdaichhu")
-
-def search_youtube(query):
-    """Search on YouTube"""
-    if not query:
-        speak("Ke khojnu chahanchha?")
-        return
-    encoded = urllib.parse.quote(query)
-    webbrowser.open(f"https://www.youtube.com/results?search_query={encoded}")
-    speak(f"YouTube ma {query} khojdaichhu")
+def open_gmail():
+    webbrowser.open("https://mail.google.com")
+    speak("Opening Gmail.")
 
 # =====================================
 # TIME FUNCTIONS
 # =====================================
 
 def tell_time():
-    """Tell current time"""
     now = datetime.datetime.now()
     time_str = now.strftime("%I:%M %p")
-    speak(f"Time {time_str} bhayo")
+    speak(f"The time is {time_str}.")
 
 def tell_date():
-    """Tell current date"""
     now = datetime.datetime.now()
     date_str = now.strftime("%A, %B %d, %Y")
-    speak(f"Aaja {date_str} ho")
+    speak(f"Today is {date_str}.")
 
 # =====================================
 # SYSTEM FUNCTIONS
 # =====================================
 
-def shutdown_pc():
-    """Shutdown computer"""
-    speak("5 seconds ma PC band huncha")
-    os.system("shutdown /s /t 5")
-
-def restart_pc():
-    """Restart computer"""
-    speak("5 seconds ma PC restart huncha")
-    os.system("shutdown /r /t 5")
-
-def lock_pc():
-    """Lock computer"""
-    speak("PC lock gare")
-    os.system("rundll32.exe user32.dll,LockWorkStation")
-
-def volume_up():
-    """System volume up"""
-    for _ in range(5):
-        pyautogui.press('volumeup')
-    speak("Volume badhaudiye")
-
-def volume_down():
-    """System volume down"""
-    for _ in range(5):
-        pyautogui.press('volumedown')
-    speak("Volume ghataudiye")
-
-def volume_mute():
-    """Mute volume"""
-    pyautogui.press('volumemute')
-    speak("Volume mute gare")
-
-# =====================================
-# APP FUNCTIONS
-# =====================================
-
-def open_notepad():
-    os.system("start notepad.exe")
-    speak("Notepad kholidiye")
-
-def open_calculator():
-    os.system("start calc.exe")
-    speak("Calculator kholidiye")
-
-def open_cmd():
-    os.system("start cmd.exe")
-    speak("Command Prompt kholidiye")
-
-def open_chrome():
-    os.system("start chrome.exe")
-    speak("Chrome kholidiye")
-
-# =====================================
-# SCREENSHOT FUNCTION
-# =====================================
-
 def take_screenshot():
-    """Take screenshot"""
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"screenshot_{timestamp}.png"
     try:
         screenshot = pyautogui.screenshot()
         screenshot.save(filename)
-        speak(f"Screenshot save gare: {filename}")
+        speak(f"Screenshot saved as {filename}.")
     except:
-        speak("Screenshot lina sakina")
+        speak("Unable to take screenshot.")
+
+def shutdown_pc():
+    speak("Shutting down your computer in 5 seconds. Goodbye Gulshan!")
+    os.system("shutdown /s /t 5")
+
+def restart_pc():
+    speak("Restarting your computer in 5 seconds. See you soon Gulshan!")
+    os.system("shutdown /r /t 5")
+
+def lock_pc():
+    speak("Locking your computer.")
+    os.system("rundll32.exe user32.dll,LockWorkStation")
 
 # =====================================
 # CONVERSATION FUNCTIONS
@@ -355,36 +195,54 @@ def take_screenshot():
 
 def thank_you():
     responses = [
-        "Timilai pani dhanyabad",
-        "Kehi chaincha bhane bhanu hai",
-        "Khushi lagyo timilai help garna",
+        "You're welcome Gulshan!",
+        "Happy to help Gulshan!",
+        "Anytime Gulshan!",
+        "My pleasure Gulshan!"
     ]
     speak(random.choice(responses))
 
 def how_are_you():
     responses = [
-        "Ma thik chu, timi kasto chhau?",
-        "Ready to help you",
-        "Perfect, timi chinta nagara",
+        "I'm doing great Gulshan! Ready to help you.",
+        "All systems operational Gulshan!",
+        "I'm perfect Gulshan! What can I do for you?"
     ]
     speak(random.choice(responses))
 
-def greet_morning():
-    speak("Good morning Gulshan, subha prabhat")
-
-def greet_night():
-    speak("Good night Gulshan, mitho nindra")
-
 def tell_joke():
     jokes = [
-        "Kina computer chiso huncha? Because it has Windows!",
-        "Programmer haru kina sadhai busy huncha? Because they have too many problems!",
+        "Why do computers get cold? Because they leave their Windows open!",
+        "Why did the programmer quit his job? He didn't get arrays!",
+        "What's a computer's favorite beat? An an-nvidia beat!"
     ]
     speak(random.choice(jokes))
 
 def introduce():
-    speak("Ma MJ hu, Gulshan ko personal assistant. Ke help chahanchha?")
+    intro = f"""
+    Hello Gulshan! I am MJ, your personal AI assistant.
+    I can open websites, play YouTube videos, control your computer,
+    tell you the time, take screenshots, and much more.
+    Just say a command and I'll take care of it.
+    How can I help you today Gulshan?
+    """
+    speak(intro)
 
 def show_help():
-    help_text = "MJ lai command dinu hola: YouTube khol, search gar, time batau, window band gara, volume control"
+    help_text = """
+    Here are the commands you can use:
+    - 'open youtube' - Opens YouTube
+    - 'nepali song' - Plays Nepali song
+    - 'bollywood song' - Plays Bollywood song
+    - 'play [song name]' - Plays specific song
+    - 'pause' - Pauses video
+    - 'next' - Next video
+    - 'volume up' - Increases volume
+    - 'close it' - Closes window
+    - 'google khol' - Opens Google
+    - 'time kati bhayo' - Tells time
+    - 'screenshot' - Takes screenshot
+    - 'who are you' - Introduction
+    - 'help' - Shows this help
+    """
     speak(help_text)

@@ -1,27 +1,18 @@
 """
 MJ ASSISTANT - BRAIN MODULE
+FINAL VERSION - All functions working with voice
 """
 
 from assistant.voice import listen
 from assistant.actions import *
-from assistant.utils import get_greeting, get_activation_response
+from assistant.utils import get_activation_response, get_error_response
 import time
 
 def run_brain(log, update_activation, close_callback):
-    """Main brain with all command patterns"""
+    """Main brain with all functions working"""
     
     log("🔄 MJ system initializing...", "system")
     activated = False
-    
-    # Activation patterns
-    activation_patterns = ['hey mj', 'mj', 'हे म्ज', 'म्ज']
-    
-    # Close patterns
-    close_patterns = [
-        'close it', 'band gara', 'close gara', 'window band',
-        'close window', 'band de', 'yo band gara', 'close it mj',
-        'band gara mj', 'close mj'
-    ]
     
     while True:
         try:
@@ -32,13 +23,13 @@ def run_brain(log, update_activation, close_callback):
                 continue
             
             command_lower = command.lower().strip()
-            log(f"🎤 Input: {command_lower}", "command")
+            log(f"🎤 You said: {command_lower}", "command")
             
             # =====================================
             # ACTIVATION
             # =====================================
             if not activated:
-                if any(pattern in command_lower for pattern in activation_patterns):
+                if 'hey mj' in command_lower or 'mj' in command_lower:
                     response = get_activation_response()
                     speak(response)
                     log(f"🤖 {response}", "success")
@@ -49,237 +40,204 @@ def run_brain(log, update_activation, close_callback):
                 continue
             
             # =====================================
-            # CLOSE COMMANDS
+            # CLOSE WINDOW
             # =====================================
-            if any(pattern in command_lower for pattern in close_patterns):
-                log("❌ Closing window...", "close")
-                speak("Window band garchhu")
-                close_callback()
+            if any(x in command_lower for x in ['close it', 'band gara', 'close window', 'window close', 'close mj']):
+                log("🪟 Closing window...", "close")
+                close_current_window()
                 continue
             
             # =====================================
             # YOUTUBE OPEN
             # =====================================
-            if ('youtube' in command_lower or 'yt' in command_lower) and ('khol' in command_lower or 'open' in command_lower):
-                if 'arko' in command_lower or 'new' in command_lower or 'another' in command_lower:
-                    log("🆕 Opening new YouTube tab...", "success")
-                    youtube_new_tab()
-                else:
-                    log("▶️ Opening YouTube...", "success")
-                    youtube_open()
+            if any(x in command_lower for x in ['open youtube', 'youtube khol', 'youtube open', 'yt khol']):
+                log("▶️ Opening YouTube...", "success")
+                youtube_open()
                 continue
             
             # =====================================
-            # YOUTUBE CLOSE
+            # NEPALI SONG
             # =====================================
-            if ('youtube' in command_lower or 'yt' in command_lower) and ('band' in command_lower or 'close' in command_lower):
-                log("❌ Closing YouTube tab...", "close")
-                youtube_close_tab()
+            if any(x in command_lower for x in ['nepali song', 'नेपाली गीत']):
+                log("🎵 Playing Nepali song...", "success")
+                youtube_play_nepali()
                 continue
             
             # =====================================
-            # YOUTUBE SEARCH
+            # BOLLYWOOD SONG
             # =====================================
-            if ('youtube search' in command_lower or 'search in youtube' in command_lower or 'yt search' in command_lower):
-                query = command_lower.replace('youtube search', '')
-                query = query.replace('search in youtube', '')
-                query = query.replace('yt search', '')
-                query = query.replace('in youtube', '')
-                query = query.replace('ma', '')
-                query = query.replace('khoj', '')
-                query = query.replace('mj', '').strip()
+            if any(x in command_lower for x in ['bollywood song', 'बलिउड गीत', 'hindi song']):
+                log("🎵 Playing Bollywood song...", "success")
+                youtube_play_bollywood()
+                continue
+            
+            # =====================================
+            # ARTIST SONGS
+            # =====================================
+            if 'arijit singh' in command_lower:
+                log("🎵 Playing Arijit Singh songs...", "success")
+                youtube_play_artist('arijit singh')
+                continue
                 
-                if query:
-                    log(f"🎵 Searching YouTube for: {query}", "success")
-                    youtube_search(query)
-                else:
-                    speak("Ke khojnu chahanchha?")
+            if 'atif aslam' in command_lower:
+                log("🎵 Playing Atif Aslam songs...", "success")
+                youtube_play_artist('atif aslam')
+                continue
+                
+            if 'nepathya' in command_lower:
+                log("🎵 Playing Nepathya songs...", "success")
+                youtube_play_artist('nepathya')
                 continue
             
             # =====================================
-            # PLAY SONG
+            # PLAY SPECIFIC SONG
             # =====================================
-            if 'play' in command_lower and ('song' in command_lower or 'youtube' in command_lower):
-                query = command_lower.replace('play', '')
-                query = query.replace('song', '')
-                query = query.replace('youtube', '')
-                query = query.replace('mj', '').strip()
-                
-                if query:
-                    log(f"🎵 Playing on YouTube: {query}", "success")
-                    youtube_search(query)
-                else:
-                    speak("Ke play garnu chahanchha?")
+            if 'play' in command_lower:
+                song = command_lower.replace('play', '').replace('song', '').strip()
+                if song:
+                    log(f"🎵 Playing {song}...", "success")
+                    youtube_play_song(song)
                 continue
             
             # =====================================
             # VIDEO CONTROL
             # =====================================
-            if 'pause' in command_lower or 'rok' in command_lower:
+            if any(x in command_lower for x in ['pause', 'rok', 'रोक']):
+                log("⏸️ Pausing video...", "success")
                 youtube_pause()
                 continue
-            
-            if 'resume' in command_lower or 'feri chalau' in command_lower:
+                
+            if any(x in command_lower for x in ['resume', 'feri chalau', 'play again']):
+                log("▶️ Resuming video...", "success")
                 youtube_resume()
                 continue
-            
-            if 'next video' in command_lower or 'arko video' in command_lower:
+                
+            if any(x in command_lower for x in ['next', 'arko', 'अर्को']):
+                log("⏭️ Next video...", "success")
                 youtube_next()
                 continue
-            
-            if 'previous video' in command_lower or 'pahilo video' in command_lower:
+                
+            if any(x in command_lower for x in ['previous', 'pahilo', 'पहिलो']):
+                log("⏮️ Previous video...", "success")
                 youtube_previous()
                 continue
-            
-            if 'first video' in command_lower or 'pahilo video play' in command_lower:
-                youtube_play_first()
-                continue
-            
-            # =====================================
-            # VOLUME CONTROL
-            # =====================================
-            if ('volume up' in command_lower or 'awaz badha' in command_lower):
+                
+            if any(x in command_lower for x in ['volume up', 'awaz badha', 'आवाज बढाउ']):
+                log("🔊 Volume up...", "success")
                 youtube_volume_up()
                 continue
-            
-            if ('volume down' in command_lower or 'awaz kam' in command_lower):
+                
+            if any(x in command_lower for x in ['volume down', 'awaz kam', 'आवाज घटाउ']):
+                log("🔉 Volume down...", "success")
                 youtube_volume_down()
                 continue
-            
-            # =====================================
-            # TAB CONTROL
-            # =====================================
-            if ('next tab' in command_lower or 'arko tab' in command_lower):
-                youtube_next_tab()
-                continue
-            
-            if ('previous tab' in command_lower or 'pahilo tab' in command_lower):
-                youtube_prev_tab()
-                continue
-            
-            # =====================================
-            # FULLSCREEN
-            # =====================================
-            if 'fullscreen' in command_lower or 'pura screen' in command_lower:
+                
+            if any(x in command_lower for x in ['fullscreen', 'pura screen']):
+                log("🖥️ Fullscreen...", "success")
                 youtube_fullscreen()
                 continue
             
             # =====================================
             # WEBSITES
             # =====================================
-            if 'google' in command_lower and ('khol' in command_lower or 'open' in command_lower):
+            if any(x in command_lower for x in ['google khol', 'google open']):
+                log("🌐 Opening Google...", "success")
                 open_google()
                 continue
-            
-            if 'chatgpt' in command_lower or 'chat gpt' in command_lower:
+                
+            if any(x in command_lower for x in ['chatgpt khol', 'chat gpt']):
+                log("🤖 Opening ChatGPT...", "success")
                 open_chatgpt()
                 continue
-            
-            if 'deepseek' in command_lower:
-                open_deepseek()
+                
+            if any(x in command_lower for x in ['facebook khol', 'fb khol']):
+                log("📘 Opening Facebook...", "success")
+                open_facebook()
                 continue
-            
-            if 'github' in command_lower:
-                open_github()
+                
+            if any(x in command_lower for x in ['instagram khol', 'insta']):
+                log("📷 Opening Instagram...", "success")
+                open_instagram()
                 continue
-            
-            if 'gmail' in command_lower:
+                
+            if any(x in command_lower for x in ['gmail khol', 'mail']):
+                log("📧 Opening Gmail...", "success")
                 open_gmail()
                 continue
             
             # =====================================
-            # SEARCH
+            # TIME & DATE
             # =====================================
-            if 'search' in command_lower or 'khoj' in command_lower:
-                if 'youtube' not in command_lower:
-                    query = command_lower.replace('search', '')
-                    query = query.replace('khoj', '')
-                    query = query.replace('google', '')
-                    query = query.replace('mj', '').strip()
-                    
-                    if query:
-                        log(f"🔍 Searching Google for: {query}", "success")
-                        search_google(query)
-                    else:
-                        speak("Ke khojnu chahanchha?")
-                continue
-            
-            # =====================================
-            # TIME
-            # =====================================
-            if 'time' in command_lower or 'समय' in command_lower or 'kati bhayo' in command_lower:
+            if any(x in command_lower for x in ['time kati', 'what time', 'समय']):
+                log("⏰ Getting time...", "success")
                 tell_time()
                 continue
-            
-            if 'date' in command_lower or 'मिति' in command_lower:
+                
+            if any(x in command_lower for x in ['date kati', 'what date', 'मिति']):
+                log("📅 Getting date...", "success")
                 tell_date()
                 continue
             
             # =====================================
             # SYSTEM
             # =====================================
-            if 'shutdown' in command_lower or 'band gara' in command_lower:
+            if any(x in command_lower for x in ['screenshot', 'photo le', 'स्क्रिनसट']):
+                log("📸 Taking screenshot...", "success")
+                take_screenshot()
+                continue
+                
+            if any(x in command_lower for x in ['shutdown', 'band gara']):
+                log("🔴 Shutting down...", "close")
                 shutdown_pc()
                 continue
-            
-            if 'restart' in command_lower:
+                
+            if any(x in command_lower for x in ['restart', 'reboot']):
+                log("🔄 Restarting...", "close")
                 restart_pc()
                 continue
-            
-            if 'lock' in command_lower:
+                
+            if any(x in command_lower for x in ['lock', 'लक']):
+                log("🔒 Locking PC...", "close")
                 lock_pc()
                 continue
             
             # =====================================
-            # APPS
+            # INTRO
             # =====================================
-            if 'notepad' in command_lower:
-                open_notepad()
-                continue
-            
-            if 'calculator' in command_lower:
-                open_calculator()
-                continue
-            
-            if 'cmd' in command_lower or 'command prompt' in command_lower:
-                open_cmd()
+            if any(x in command_lower for x in ['who are you', 'timí ko ho', 'introduce']):
+                log("🤖 Introducing MJ...", "success")
+                introduce()
                 continue
             
             # =====================================
-            # SCREENSHOT
+            # HELP
             # =====================================
-            if 'screenshot' in command_lower or 'photo le' in command_lower:
-                take_screenshot()
+            if any(x in command_lower for x in ['help', 'commands', 'सहायता']):
+                log("📚 Showing help...", "success")
+                show_help()
                 continue
             
             # =====================================
             # CONVERSATION
             # =====================================
-            if 'thank' in command_lower or 'thanks' in command_lower:
+            if any(x in command_lower for x in ['thank', 'thanks', 'धन्यवाद']):
                 thank_you()
                 continue
-            
-            if 'how are you' in command_lower:
+                
+            if any(x in command_lower for x in ['how are you', 'kata chhau']):
                 how_are_you()
                 continue
-            
-            if 'joke' in command_lower:
+                
+            if any(x in command_lower for x in ['joke', 'मजाक']):
                 tell_joke()
-                continue
-            
-            if 'who are you' in command_lower:
-                introduce()
-                continue
-            
-            if 'help' in command_lower:
-                show_help()
                 continue
             
             # =====================================
             # NOT RECOGNIZED
             # =====================================
-            log("❌ Command not recognized", "error")
-            speak("Maile bujhina. Pheri bhanu na.")
+            error_msg = get_error_response()
+            speak(error_msg)
+            log(f"❌ Command not recognized", "error")
             
         except Exception as e:
             log(f"⚠️ Error: {str(e)}", "error")
