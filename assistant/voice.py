@@ -6,16 +6,17 @@ FINAL VERSION - Nepali + English + Hindi
 import speech_recognition as sr
 import time
 
+
 # =====================================
 # RECOGNIZER SETUP
 # =====================================
 
 recognizer = sr.Recognizer()
 
-recognizer.energy_threshold = 3000
+recognizer.energy_threshold = 1200
 recognizer.dynamic_energy_threshold = True
 
-recognizer.pause_threshold = 0.8
+recognizer.pause_threshold = 1.0
 recognizer.phrase_threshold = 0.3
 recognizer.non_speaking_duration = 0.5
 
@@ -126,6 +127,7 @@ def listen():
 
         return ""
 
+
 # =====================================
 # CLEAN COMMAND
 # =====================================
@@ -140,24 +142,74 @@ def clean_command(command):
     # remove unwanted spaces
     command = " ".join(command.split())
 
-    # common replacements
+    # =====================================
+    # COMMON REPLACEMENTS
+    # =====================================
+
     replacements = {
 
+        # apps
         "fb": "facebook",
+        "face book": "facebook",
 
         "insta": "instagram",
 
         "mail": "gmail",
+        "e mail": "gmail",
 
         "you tube": "youtube",
 
         "chat gpt": "chatgpt",
 
+        # assistant name
         "एमजे": "mj",
+
+        # open words
+        "खोल": "open",
+        "खोल्नु": "open",
+        "खोल्नुस": "open",
+        "खोल्न": "open",
+
+        "khol": "open",
+        "khola": "open",
+
+        # close words
+        "बन्द": "close",
+        "बंद": "close",
+
+        "banda": "close",
+        "band": "close",
+
+        # misc
+        "current tab": "current",
+        "this tab": "current",
     }
 
     for old, new in replacements.items():
 
         command = command.replace(old, new)
+
+    # =====================================
+    # REMOVE EXTRA WORDS
+    # =====================================
+
+    remove_words = [
+
+        "gar",
+        "gara",
+        "please",
+        "jara",
+        "zara",
+        "mj",
+    ]
+
+    for word in remove_words:
+
+        command = command.replace(word, "")
+
+    # clean again
+    command = " ".join(command.split())
+
+    print(f"🧠 Cleaned Command: {command}")
 
     return command

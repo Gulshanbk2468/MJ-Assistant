@@ -1,10 +1,11 @@
 """
 MJ ASSISTANT - BRAIN MODULE
-FINAL VERSION - ALL FEATURES + SMART WEBSITE CONTROL
+FINAL VERSION - SMART WEBSITE CONTROL + ALL FEATURES
 """
 
 from assistant.voice import listen
 from assistant.actions import *
+
 from assistant.utils import (
     get_activation_response,
     get_error_response
@@ -12,8 +13,15 @@ from assistant.utils import (
 
 import time
 
+
+# =====================================
+# MAIN BRAIN
+# =====================================
+
 def run_brain(log, update_activation, close_callback):
-    """Main MJ brain"""
+    """
+    Main MJ Brain
+    """
 
     log("🔄 MJ system initializing...", "system")
 
@@ -37,11 +45,22 @@ def run_brain(log, update_activation, close_callback):
             # ACTIVATION
             # =====================================
 
+            activation_words = [
+
+                "hey mj",
+                "mj",
+                "hey",
+                "em jay",
+                "m j",
+                "mj assistant"
+
+            ]
+
             if not activated:
 
-                if (
-                    'hey mj' in command_lower
-                    or 'mj' in command_lower
+                if any(
+                    word in command_lower
+                    for word in activation_words
                 ):
 
                     response = get_activation_response()
@@ -55,7 +74,34 @@ def run_brain(log, update_activation, close_callback):
                     update_activation(True)
 
                 else:
-                    log("⏳ Say 'hey mj' to activate", "system")
+
+                    log(
+                        "⏳ Say 'hey mj' to activate",
+                        "system"
+                    )
+
+                continue
+
+            # =====================================
+            # EXIT / DEACTIVATE
+            # =====================================
+
+            if any(x in command_lower for x in [
+
+                "sleep mj",
+                "go sleep",
+                "deactivate",
+                "stop listening"
+
+            ]):
+
+                speak("Going to sleep")
+
+                log("💤 MJ deactivated", "close")
+
+                activated = False
+
+                update_activation(False)
 
                 continue
 
@@ -63,16 +109,34 @@ def run_brain(log, update_activation, close_callback):
             # SMART WEBSITE OPEN
             # =====================================
 
-            if (
-                "open" in command_lower
-                or "khol" in command_lower
-                or "khola" in command_lower
-                or "open gar" in command_lower
-            ):
+            open_words = [
 
-                if smart_open_website(command_lower):
+                "open",
+                "search",
+                "khol",
+                "khola"
 
-                    log("🌐 Opening website...", "success")
+            ]
+
+            if any(word in command_lower for word in open_words):
+
+                query = command_lower
+
+                # remove keywords
+                for word in open_words:
+
+                    query = query.replace(word, "")
+
+                query = query.strip()
+
+                if query:
+
+                    log(
+                        f"🌐 Opening {query}...",
+                        "success"
+                    )
+
+                    smart_open_website(query)
 
                     continue
 
@@ -80,85 +144,104 @@ def run_brain(log, update_activation, close_callback):
             # SMART WEBSITE CLOSE
             # =====================================
 
-            if (
-                "close" in command_lower
-                or "banda" in command_lower
-                or "close gar" in command_lower
-            ):
+            close_words = [
 
-                # specific tab close
-                if (
-                    "facebook" in command_lower
-                    or "fb" in command_lower
-                    or "gmail" in command_lower
-                    or "email" in command_lower
-                    or "instagram" in command_lower
-                    or "youtube" in command_lower
-                    or "chatgpt" in command_lower
-                ):
+                "close",
+                "banda",
+                "band"
 
-                    if smart_close_website(command_lower):
+            ]
 
-                        log("❌ Closing specific tab...", "close")
+            if any(word in command_lower for word in close_words):
 
-                        continue
+                # current tab
+                if any(x in command_lower for x in [
 
-                # current tab close
-                elif (
-                    "it" in command_lower
-                    or "this" in command_lower
-                    or "window" in command_lower
-                ):
+                    "it",
+                    "this",
+                    "current",
+                    "tab",
+                    "window"
 
-                    log("🪟 Closing current window...", "close")
+                ]):
 
-                    close_current_window()
+                    log(
+                        "❌ Closing current tab...",
+                        "close"
+                    )
+
+                    smart_close_website(
+                        command_lower
+                    )
 
                     continue
 
+                # specific close
+                else:
+
+                    query = command_lower
+
+                    for word in close_words:
+
+                        query = query.replace(
+                            word,
+                            ""
+                        )
+
+                    query = query.strip()
+
+                    if query:
+
+                        log(
+                            f"❌ Closing {query}...",
+                            "close"
+                        )
+
+                        smart_close_website(
+                            query
+                        )
+
+                        continue
+
             # =====================================
-            # CLOSE WINDOW
+            # YOUTUBE SONG PLAY
             # =====================================
 
-            if any(x in command_lower for x in [
-                'close it',
-                'window close',
-                'close mj'
-            ]):
+            if "play" in command_lower:
 
-                log("🪟 Closing window...", "close")
+                song = (
+                    command_lower
+                    .replace("play", "")
+                    .replace("song", "")
+                    .strip()
+                )
 
-                close_current_window()
+                if song:
 
-                continue
+                    log(
+                        f"🎵 Playing {song}...",
+                        "success"
+                    )
 
-            # =====================================
-            # YOUTUBE OPEN
-            # =====================================
+                    youtube_play_song(song)
 
-            if any(x in command_lower for x in [
-                'open youtube',
-                'youtube khol',
-                'youtube open',
-                'yt khol'
-            ]):
-
-                log("▶️ Opening YouTube...", "success")
-
-                youtube_open()
-
-                continue
+                    continue
 
             # =====================================
             # NEPALI SONG
             # =====================================
 
             if any(x in command_lower for x in [
-                'nepali song',
-                'नेपाली गीत'
+
+                "nepali song",
+                "नेपाली गीत"
+
             ]):
 
-                log("🎵 Playing Nepali song...", "success")
+                log(
+                    "🎵 Playing Nepali songs...",
+                    "success"
+                )
 
                 youtube_play_nepali()
 
@@ -169,98 +252,100 @@ def run_brain(log, update_activation, close_callback):
             # =====================================
 
             if any(x in command_lower for x in [
-                'bollywood song',
-                'बलिउड गीत',
-                'hindi song'
+
+                "bollywood song",
+                "hindi song",
+                "बलिउड गीत"
+
             ]):
 
-                log("🎵 Playing Bollywood song...", "success")
+                log(
+                    "🎵 Playing Bollywood songs...",
+                    "success"
+                )
 
                 youtube_play_bollywood()
 
                 continue
 
             # =====================================
-            # ARTIST SONGS
+            # ARTISTS
             # =====================================
 
-            if 'arijit singh' in command_lower:
+            if "arijit singh" in command_lower:
 
-                log("🎵 Playing Arijit Singh songs...", "success")
-
-                youtube_play_artist('arijit singh')
-
-                continue
-
-            if 'atif aslam' in command_lower:
-
-                log("🎵 Playing Atif Aslam songs...", "success")
-
-                youtube_play_artist('atif aslam')
-
-                continue
-
-            if 'nepathya' in command_lower:
-
-                log("🎵 Playing Nepathya songs...", "success")
-
-                youtube_play_artist('nepathya')
-
-                continue
-
-            # =====================================
-            # PLAY SONG
-            # =====================================
-
-            if 'play' in command_lower:
-
-                song = (
-                    command_lower
-                    .replace('play', '')
-                    .replace('song', '')
-                    .strip()
+                log(
+                    "🎵 Playing Arijit Singh...",
+                    "success"
                 )
 
-                if song:
+                youtube_play_artist(
+                    "arijit singh"
+                )
 
-                    log(f"🎵 Playing {song}...", "success")
+                continue
 
-                    youtube_play_song(song)
+            if "atif aslam" in command_lower:
+
+                log(
+                    "🎵 Playing Atif Aslam...",
+                    "success"
+                )
+
+                youtube_play_artist(
+                    "atif aslam"
+                )
+
+                continue
+
+            if "nepathya" in command_lower:
+
+                log(
+                    "🎵 Playing Nepathya...",
+                    "success"
+                )
+
+                youtube_play_artist(
+                    "nepathya"
+                )
 
                 continue
 
             # =====================================
-            # VIDEO CONTROL
+            # VIDEO CONTROLS
             # =====================================
 
             if any(x in command_lower for x in [
-                'pause',
-                'rok',
-                'रोक'
+
+                "pause",
+                "rok"
+
             ]):
 
-                log("⏸️ Pausing video...", "success")
+                log("⏸️ Pausing...", "success")
 
                 youtube_pause()
 
                 continue
 
             if any(x in command_lower for x in [
-                'resume',
-                'feri chalau',
-                'play again'
+
+                "resume",
+                "play again"
+
             ]):
 
-                log("▶️ Resuming video...", "success")
+                log("▶️ Resuming...", "success")
 
                 youtube_resume()
 
                 continue
 
             if any(x in command_lower for x in [
-                'next',
-                'arko',
-                'अर्को'
+
+                "next",
+                "arko"
+
             ]):
 
                 log("⏭️ Next video...", "success")
@@ -270,9 +355,10 @@ def run_brain(log, update_activation, close_callback):
                 continue
 
             if any(x in command_lower for x in [
-                'previous',
-                'pahilo',
-                'पहिलो'
+
+                "previous",
+                "pahilo"
+
             ]):
 
                 log("⏮️ Previous video...", "success")
@@ -282,9 +368,10 @@ def run_brain(log, update_activation, close_callback):
                 continue
 
             if any(x in command_lower for x in [
-                'volume up',
-                'awaz badha',
-                'आवाज बढाउ'
+
+                "volume up",
+                "awaz badha"
+
             ]):
 
                 log("🔊 Volume up...", "success")
@@ -294,9 +381,10 @@ def run_brain(log, update_activation, close_callback):
                 continue
 
             if any(x in command_lower for x in [
-                'volume down',
-                'awaz kam',
-                'आवाज घटाउ'
+
+                "volume down",
+                "awaz kam"
+
             ]):
 
                 log("🔉 Volume down...", "success")
@@ -306,8 +394,10 @@ def run_brain(log, update_activation, close_callback):
                 continue
 
             if any(x in command_lower for x in [
-                'fullscreen',
-                'pura screen'
+
+                "fullscreen",
+                "full screen"
+
             ]):
 
                 log("🖥️ Fullscreen...", "success")
@@ -317,72 +407,14 @@ def run_brain(log, update_activation, close_callback):
                 continue
 
             # =====================================
-            # WEBSITES
+            # TIME
             # =====================================
 
             if any(x in command_lower for x in [
-                'google khol',
-                'google open'
-            ]):
 
-                log("🌐 Opening Google...", "success")
+                "time",
+                "समय"
 
-                open_google()
-
-                continue
-
-            if any(x in command_lower for x in [
-                'chatgpt khol',
-                'chat gpt'
-            ]):
-
-                log("🤖 Opening ChatGPT...", "success")
-
-                open_chatgpt()
-
-                continue
-
-            if any(x in command_lower for x in [
-                'facebook khol',
-                'fb khol'
-            ]):
-
-                log("📘 Opening Facebook...", "success")
-
-                open_facebook()
-
-                continue
-
-            if any(x in command_lower for x in [
-                'instagram khol',
-                'insta'
-            ]):
-
-                log("📷 Opening Instagram...", "success")
-
-                open_instagram()
-
-                continue
-
-            if any(x in command_lower for x in [
-                'gmail khol',
-                'mail'
-            ]):
-
-                log("📧 Opening Gmail...", "success")
-
-                open_gmail()
-
-                continue
-
-            # =====================================
-            # TIME & DATE
-            # =====================================
-
-            if any(x in command_lower for x in [
-                'time kati',
-                'what time',
-                'समय'
             ]):
 
                 log("⏰ Getting time...", "success")
@@ -391,10 +423,15 @@ def run_brain(log, update_activation, close_callback):
 
                 continue
 
+            # =====================================
+            # DATE
+            # =====================================
+
             if any(x in command_lower for x in [
-                'date kati',
-                'what date',
-                'मिति'
+
+                "date",
+                "मिति"
+
             ]):
 
                 log("📅 Getting date...", "success")
@@ -404,63 +441,82 @@ def run_brain(log, update_activation, close_callback):
                 continue
 
             # =====================================
-            # SYSTEM
+            # SCREENSHOT
             # =====================================
 
             if any(x in command_lower for x in [
-                'screenshot',
-                'photo le',
-                'स्क्रिनसट'
+
+                "screenshot",
+                "photo le"
+
             ]):
 
-                log("📸 Taking screenshot...", "success")
+                log(
+                    "📸 Taking screenshot...",
+                    "success"
+                )
 
                 take_screenshot()
 
                 continue
 
-            if any(x in command_lower for x in [
-                'shutdown'
-            ]):
+            # =====================================
+            # SYSTEM CONTROLS
+            # =====================================
 
-                log("🔴 Shutting down...", "close")
+            if "shutdown" in command_lower:
+
+                log(
+                    "🔴 Shutting down...",
+                    "close"
+                )
 
                 shutdown_pc()
 
                 continue
 
             if any(x in command_lower for x in [
-                'restart',
-                'reboot'
+
+                "restart",
+                "reboot"
+
             ]):
 
-                log("🔄 Restarting...", "close")
+                log(
+                    "🔄 Restarting...",
+                    "close"
+                )
 
                 restart_pc()
 
                 continue
 
-            if any(x in command_lower for x in [
-                'lock',
-                'लक'
-            ]):
+            if "lock" in command_lower:
 
-                log("🔒 Locking PC...", "close")
+                log(
+                    "🔒 Locking PC...",
+                    "close"
+                )
 
                 lock_pc()
 
                 continue
 
             # =====================================
-            # INTRO
+            # INTRODUCTION
             # =====================================
 
             if any(x in command_lower for x in [
-                'who are you',
-                'introduce'
+
+                "who are you",
+                "introduce"
+
             ]):
 
-                log("🤖 Introducing MJ...", "success")
+                log(
+                    "🤖 Introducing MJ...",
+                    "success"
+                )
 
                 introduce()
 
@@ -471,43 +527,61 @@ def run_brain(log, update_activation, close_callback):
             # =====================================
 
             if any(x in command_lower for x in [
-                'help',
-                'commands',
-                'सहायता'
+
+                "help",
+                "commands"
+
             ]):
 
-                log("📚 Showing help...", "success")
+                log(
+                    "📚 Showing help...",
+                    "success"
+                )
 
                 show_help()
 
                 continue
 
             # =====================================
-            # CONVERSATION
+            # THANK YOU
             # =====================================
 
             if any(x in command_lower for x in [
-                'thank',
-                'thanks',
-                'धन्यवाद'
+
+                "thank",
+                "thanks",
+                "धन्यवाद"
+
             ]):
 
                 thank_you()
 
                 continue
 
+            # =====================================
+            # HOW ARE YOU
+            # =====================================
+
             if any(x in command_lower for x in [
-                'how are you',
-                'kata chhau'
+
+                "how are you",
+                "kata chhau"
+
             ]):
 
                 how_are_you()
 
                 continue
 
+            # =====================================
+            # JOKE
+            # =====================================
+
             if any(x in command_lower for x in [
-                'joke',
-                'मजाक'
+
+                "joke",
+                "मजाक"
+
             ]):
 
                 tell_joke()
@@ -522,11 +596,17 @@ def run_brain(log, update_activation, close_callback):
 
             speak(error_msg)
 
-            log("❌ Command not recognized", "error")
+            log(
+                "❌ Command not recognized",
+                "error"
+            )
 
         except Exception as e:
 
-            log(f"⚠️ Error: {str(e)}", "error")
+            log(
+                f"⚠️ Error: {str(e)}",
+                "error"
+            )
 
             time.sleep(0.5)
 
